@@ -1,5 +1,5 @@
 import Application, { Context, Next } from 'koa';
-import httpProxy, { ProxyResCallback } from 'http-proxy';
+import httpProxy, { ProxyResCallback, ServerOptions } from 'http-proxy';
 import { match } from 'node-match-path';
 import { isFunction } from 'lodash';
 
@@ -26,7 +26,7 @@ export default function addProxy(app: Application) {
                             const d = data.toString();
                             if (d.includes('系统异常')) {
                                 return;
-                            }return
+                            }
                             map.set(type, data.toString());
                         });
                     },
@@ -42,6 +42,7 @@ interface ProxyOptions {
     events?: {
         proxyRes: ProxyResCallback;
     };
+    headers?: ServerOptions['headers'];
 }
 
 type Options = ProxyOptions | ((ctx: Context) => ProxyOptions | undefined | false);
@@ -83,7 +84,7 @@ export function proxyMiddle(proxyUrl: string, options: Options) {
         ctx.req.url = '';
 
         await new Promise((resolve, reject) => {
-            proxy.web(ctx.req, ctx.res, opts, (e, req, res) => {
+            proxy.web(ctx.req, ctx.res, { ...opts }, (e, req, res) => {
                 if (e) {
                     reject(e);
                     return;
