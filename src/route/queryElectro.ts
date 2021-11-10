@@ -29,7 +29,7 @@ interface Position {
 }
 
 interface QueryElectro {
-    positions: (Position & { id: number })[];
+    positions: number[];
     account: string;
 }
 
@@ -105,10 +105,11 @@ async function fetchElectroAndCreate(id: number | PositionModelP, area: Area, bu
     ElectroModel.create({ electro, positionId: positionItem.id });
 }
 
-route.post('/queryElectro', async ctx => {
-    const { account, positions } = ctx.request.body as QueryElectro;
+route.get('/queryElectro', async ctx => {
+    const { account, positions: rawpositions } = ctx.request.query as unknown as QueryElectro;
 
-    assert(Array.isArray(positions), '参数positions必须是一个数组');
+
+    const positions = Array.isArray(rawpositions) ? rawpositions : [rawpositions];
 
     if (!positions.length) {
         ctx.send({ code: 200, data: [] });
@@ -116,7 +117,7 @@ route.post('/queryElectro', async ctx => {
     }
     const rooms = await PositionModel.findAll({
         where: {
-            id: positions.map(item => item.id),
+            id: positions,
         },
     });
 
@@ -171,11 +172,10 @@ route.post('/checkRoom', async ctx => {
         where: roomData,
     });
 
-    if(isSuccess) {
+    if (isSuccess) {
         const electro = await fetch_electro('123', area, building, room);
         assert(typeof electro === 'number', electro as string);
     }
-
 
     ctx.send({ code: 200, msg: '房间号正常', data: transformToPositionStrcut(position.toJSON() as any) });
 });
