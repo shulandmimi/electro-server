@@ -1,0 +1,103 @@
+version: 2.1
+
+orbs:
+    kubernetes: circleci/kubernetes@0.12.0
+
+references:
+    only_version_tags: &only_version_tags
+        tags:
+            only: /^v[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta)\.\d+)?$/
+    exclude_all_branch: &exclude_all_branch
+        branches:
+            ignore: /.*/
+
+jobs:
+    build:
+        docker:
+            - image: node:latest
+        steps:
+            - checkout
+
+            - run:
+                  name: 下载依赖
+                  command: yarn install --registry https://registry.npm.taobao.org/
+            - run:
+                  name: 打包
+                  command: |
+                    export NODE_OPTIONS=--openssl-legacy-provider
+                    yarn build
+            - persist_to_workspace:
+                  root: .
+                  paths:
+                      - .
+    deploy_image:
+        machine:
+            image: ubuntu-1604:202004-01
+        steps:
+            - attach_workspace:
+                  at: .
+            - run:
+                  name: 填充环境变量
+                  command: |
+                      echo "export DOCKER_IMAGE_NAME=$DOCKER_USERNAME/electro:server$CIRCLE_TAG" >> $BASH_ENV
+                      source $BASH_ENV
+            - run:
+                  name: 打包镜像
+                  command: docker build -t $DOCKER_IMAGE_NAME .
+            - run:
+                  name: 部署镜像
+                  command: |
+                      echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                      docker push $DOCKER_IMAGE_NAME
+            - run:
+                  name: 保存记录
+                  command: echo $DOCKER_IMAGE_NAME > IMAGE_NAME
+            - persist_to_workspace:
+                  root: .
+                  paths:
+                      - IMAGE_NAME
+
+    deploy_prod:
+        docker:
+            - image: centos
+              user: root
+        steps:
+            - attach_workspace:
+                  at: .
+            - run:
+                  name: 填充环境变量
+                  command: |
+                      echo "export DOCKER_IMAGE_NAME=$(cat IMAGE_NAME)" >> $BASH_ENV
+                      source $BASH_ENV
+            - run: yum install curl wget -y
+            - run:
+                  command: echo "$APISERVER_IP apiserver.master" >> /etc/hosts
+            - kubernetes/install
+            - run:
+                  command: |
+                      mkdir -p $HOME/.kube
+                      echo $KUBECONFIG_DATA | base64 -d > $HOME/.kube/config
+            - kubernetes/update-container-image:
+                  container-image-updates: electro-server=$DOCKER_IMAGE_NAME
+                  get-rollout-status: true
+                  resource-name: deployment/electro-server
+                  namespace: default
+                  show-kubectl-command: true
+
+workflows:
+    release:
+        jobs:
+            - build:
+                  filters:
+                      <<: *only_version_tags
+                      branches:
+                          ignore: /.*/
+            - deploy_image:
+                  requires:
+                      - build
+                  filters: *only_version_tags
+
+            - deploy_prod:
+                  requires:
+                      - deploy_image
+                  filters: *only_version_tags
