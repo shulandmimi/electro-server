@@ -1,9 +1,7 @@
-import axios, { AxiosResponse } from 'axios';
 import { scheduleJob } from 'node-schedule';
-import qs from 'query-string';
 import ElectroModel from '../model/electro';
-import PositionModel from '../model/position';
-import { Area, Building, fetch_electro, Room } from '../route/queryElectro';
+import PositionModel, { PositionModel as PositionModelT } from '../model/position';
+import { fetch_electro } from '../service/electro';
 import db from '../tools/db';
 
 var total: number;
@@ -18,18 +16,18 @@ db.afterSync(() => {
     dynamicGetTotal();
 });
 
-scheduleJob('*/5 * * * *', async fire => {
+scheduleJob('*/1 * * * *', async fire => {
     console.log(fire.toLocaleString());
     if (typeof total === 'undefined') {
         await dynamicGetTotal();
     }
-    if(total === 0) {
+    if (total === 0) {
         console.log('无需要查询的房间');
         return;
-    };
+    }
     const room = await PositionModel.findOne({
         attributes: ['room', 'roomid', 'building', 'buildingid', 'area', 'areaid', 'id'],
-        offset: offset
+        offset: offset,
     });
 
     offset += 1;
@@ -38,7 +36,7 @@ scheduleJob('*/5 * * * *', async fire => {
         if (offset >= total) offset = 0;
     }
     if (!room) return;
-    const { area, areaid, room: roomname, roomid, building, buildingid } = room;
+    const { area, areaid, room: roomname, roomid, building, buildingid } = room.toJSON() as PositionModelT;
     const electro = await fetch_electro('123', { area: areaid, areaname: area }, { building, buildingid }, { room: roomname, roomid });
 
     if (typeof electro !== 'number') {

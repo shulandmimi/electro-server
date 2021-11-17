@@ -1,13 +1,24 @@
 import Application, { Context, Next } from 'koa';
-import httpProxy, { ProxyResCallback, ServerOptions } from 'http-proxy';
+import httpProxy, { ProxyResCallback, ServerOptions, ErrorCallback } from 'http-proxy';
 import { match } from 'node-match-path';
 import { isFunction } from 'lodash';
-
 const proxy = httpProxy.createProxy();
 
 const map = new Map();
 
 const queueMap = new Map();
+
+function bufferConcat(...buffers: Buffer[]): Buffer {
+    const totalLen = buffers.reduce((r, i) => r + i.length, 0);
+
+    const buffer = Buffer.alloc(totalLen);
+
+    buffers.reduce((r, i) => {
+        i.copy(buffer, r);
+        return r + i.length;
+    }, 0);
+    return buffer;
+}
 
 export default function addProxy(app: Application) {
     app.use(
@@ -22,13 +33,28 @@ export default function addProxy(app: Application) {
                 changeOrigin: false,
                 events: {
                     proxyRes: (pres, req, res) => {
+                        let datas: Buffer[] = [];
                         pres.on('data', (data: Buffer) => {
-                            const d = data.toString();
-                            if (d.includes('系统异常')) {
+                            // const d = data.toString();
+                            // if (d.includes('系统异常')) {
+                            //     return;
+                            // }
+                            // map.set(type, data.toString());
+                            datas.push(data);
+                        });
+
+                        pres.on('end', () => {
+                            const data = bufferConcat(...datas).toString();
+                            if (data.includes('系统异常')) {
                                 return;
                             }
-                            map.set(type, data.toString());
+                            console.log(data);
+                            map.set(type, data);
                         });
+                    },
+                    error(err, req, res, target) {
+                        console.log(err);
+                        ctx.body = err.message;
                     },
                 },
             };
@@ -39,9 +65,10 @@ export default function addProxy(app: Application) {
 interface ProxyOptions {
     target: string;
     changeOrigin: boolean;
-    events?: {
+    events?: Partial<{
         proxyRes: ProxyResCallback;
-    };
+        error: ErrorCallback;
+    }>;
     headers?: ServerOptions['headers'];
 }
 
@@ -79,7 +106,7 @@ export function proxyMiddle(proxyUrl: string, options: Options) {
             queueMap.clear();
         }
 
-        console.log(`${ctx.req.url} =>> ${'http://61.183.22.187:8988/web/Common/Tsm.html'}`);
+        console.log(`${ctx.req.url} =>> ${opts.target}`);
 
         ctx.req.url = '';
 
