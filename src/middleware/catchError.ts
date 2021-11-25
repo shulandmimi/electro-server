@@ -11,10 +11,10 @@ export default function catchError(app: Application) {
             // console.log(`${error.type}: ${error.message}`);
             if (error instanceof AssertionError) {
                 ctx.sendF(error.message, StatusCode.BadRequest);
-                debug('[error] assert: %s', error.message);
+                debug('assert: %s', error.message);
             } else {
-                ctx.sendF(`${error.type}: ${error.message}`, StatusCode.ServerFailed);
-                debug('[error] %s: %s', error.type, error.message);
+                ctx.sendF(`${error.name}: ${error.message}`, StatusCode.ServerFailed);
+                debug('%s: %s', error.name, error.message);
             }
         }
     });

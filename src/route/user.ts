@@ -2,7 +2,7 @@ import Router from '@koa/router';
 import md5 from 'md5';
 import assert from 'assert';
 import UserModel, { UserModelState } from '../model/user';
-import { registerMailKey, hasRegisterKey, deleteRegisterKey, getRegisterValue } from '../service/user';
+import { registerMailKey, hasRegisterKey, deleteRegisterKey, getRegisterValue, genernalJWTAccount, LOGIN_TOKEN, JWT_EXPIRES } from '../service/user';
 import { sendMail, MailOption } from '../scripts/mail';
 import config from '../config';
 import { isEmail, isPassword } from '../tools/check';
@@ -10,7 +10,7 @@ const debug = require('debug')('user: ');
 
 const route = new Router({ prefix: '/user' });
 
-interface RegisterMail {
+export interface RegisterMail {
     account: string;
     password: string;
 }
@@ -42,7 +42,7 @@ route.post('/registerMailUser', async ctx => {
     assert(!user, '用户已存在');
 
     const key = md5(account + config.secret.salt);
-    assert(!await hasRegisterKey(key), '验证码发送过于频繁，请稍后再试');
+    assert(!(await hasRegisterKey(key)), '验证码发送过于频繁，请稍后再试');
 
     await registerMailKey(key, JSON.stringify([account, md5(password)]));
 
@@ -80,6 +80,31 @@ route.get('/validRegisterMail', async ctx => {
     debug('%s 注册成功', token);
 
     ctx.sendOM('注册成功');
+});
+
+route.post('/login', async ctx => {
+    const { account, password } = ctx.request.body as RegisterMail;
+
+    assert(isEmail(account), '邮箱格式错误');
+    assert(isPassword(password), '密码格式错误');
+
+    const passwordMD5 = md5(password);
+
+    debug('用户: %s 密码: %s 发起登录', account, passwordMD5);
+
+    const user = await UserModel.findOne({
+        where: {
+            account,
+            password: passwordMD5,
+        },
+    });
+
+    assert(user, '用户帐号或密码错误');
+
+    const key = genernalJWTAccount(ctx);
+
+    ctx.response.set('Set-Cookie', `${LOGIN_TOKEN}=${key}; max-age=${JWT_EXPIRES}; path=/`);
+    ctx.sendS();
 });
 
 export default route;
