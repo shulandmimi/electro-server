@@ -14,7 +14,7 @@ route.get('/queryElectro', async ctx => {
     const positions = Array.isArray(rawpositions) ? rawpositions : [rawpositions];
 
     if (!positions.length) {
-        ctx.send({ code: 200, data: [] });
+        ctx.sendSD([]);
         return;
     }
     const rooms = await PositionModel.findAll({
@@ -39,7 +39,7 @@ route.get('/queryElectro', async ctx => {
         },
     });
 
-    ctx.send({ code: 200, data: electros });
+    ctx.sendSD(electros);
 });
 
 route.post('/checkRoom', async ctx => {
@@ -60,7 +60,7 @@ route.post('/checkRoom', async ctx => {
 
     await fetch_and_create_electro(position, area, building, room);
 
-    ctx.send({ code: 200, msg: '房间号正常', data: transformToPositionStrcut(position.toJSON() as any) });
+    ctx.sendSDM(transformToPositionStrcut(position.toJSON() as any), '房间号正常');
 });
 
 export default route;
