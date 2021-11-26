@@ -3,12 +3,15 @@ import db from '../tools/db';
 import Position from './position';
 import UserModel from './user';
 
-export interface MailMamppingState {
+interface TMailMappingState {
     positionId: number;
     accountId: number;
 }
+export interface MailMamppingState extends TMailMappingState {
+    id: number;
+}
 
-const MailMapping = db.define<Model<MailMamppingState>, MailMamppingState>('mailMapping', {
+const MailMapping = db.define<Model<TMailMappingState, TMailMappingState>, TMailMappingState>('mailMapping', {
     positionId: {
         type: INTEGER,
         references: {
@@ -34,7 +37,7 @@ MailMapping.belongsTo(Position, {
 Position.belongsTo(MailMapping, {
     constraints: false,
     foreignKey: 'id',
-    as: 'mail'
+    as: 'mail',
 });
 
 MailMapping.belongsTo(UserModel, {

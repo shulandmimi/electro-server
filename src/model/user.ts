@@ -1,16 +1,15 @@
 import { Model, STRING } from 'sequelize';
 import db from '../tools/db';
-
 export interface OUserModelState {
     account: string;
     password: string;
 }
 
-export interface UserModelState extends OUserModelState, Model<OUserModelState> {
+export interface UserModelState extends OUserModelState {
     id: number;
 }
 
-const UserModel = db.define<UserModelState, OUserModelState>('user', {
+const UserModel = db.define<Model<OUserModelState, OUserModelState>, OUserModelState>('user', {
     account: {
         type: STRING,
         comment: '用户名',

@@ -1,20 +1,20 @@
 import Application from 'koa';
 import { AssertionError } from 'assert';
 import { StatusCode } from '../tools/types';
-const debug = require('debug')('error: ');
+import { error} from '../tools/debug';
 
 export default function catchError(app: Application) {
     app.use(async (ctx, next) => {
         try {
             await next();
-        } catch (error: any) {
+        } catch (e: any) {
             // console.log(`${error.type}: ${error.message}`);
-            if (error instanceof AssertionError) {
-                ctx.sendF(error.message, StatusCode.BadRequest);
-                debug('assert: %s', error.message);
+            if (e instanceof AssertionError) {
+                ctx.sendF(e.message, StatusCode.BadRequest);
+                error('assert: %s', e.message);
             } else {
-                ctx.sendF(`${error.name}: ${error.message}`, StatusCode.ServerFailed);
-                debug('%s: %s', error.name, error.message);
+                ctx.sendF(`${e.name}: ${e.message}`, StatusCode.ServerFailed);
+                error('%s: %s', e.name, e.message);
             }
         }
     });

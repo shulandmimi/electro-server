@@ -1,9 +1,7 @@
-import { Model, STRING, DATE, INTEGER } from 'sequelize';
+import { Model, STRING } from 'sequelize';
 import db from '../tools/db';
 
-export interface PositionModel extends Model {
-    id: number;
-
+export interface TPositionState {
     /** 校区 */
     area: string;
     /** 校区ID */
@@ -20,7 +18,11 @@ export interface PositionModel extends Model {
     roomid: string;
 }
 
-const Position = db.define<PositionModel>('position', {
+export interface PositionState extends TPositionState {
+    id: number;
+}
+
+const Position = db.define<Model<TPositionState, TPositionState>>('position', {
     area: {
         type: STRING,
         comment: '校区',
@@ -48,7 +50,7 @@ const Position = db.define<PositionModel>('position', {
         comment: '房间ID',
     },
 });
-export function transformToPositionStrcut({ area, areaid, building, buildingid, room, roomid, ...other }: PositionModel) {
+export function transformToPositionStrcut({ area, areaid, building, buildingid, room, roomid, ...other }: PositionState) {
     return {
         ...other,
         area: {

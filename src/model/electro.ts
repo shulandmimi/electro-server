@@ -2,11 +2,15 @@ import { Model, INTEGER, FLOAT } from 'sequelize';
 import Position from './position';
 import db from '../tools/db';
 
-interface ElectroModel extends Model {
+interface PElectroState {
     electro: number;
+    positionId: number;
+}
+export interface ElectroState extends PElectroState {
+    id: number;
 }
 
-const Electro = db.define<ElectroModel>('electro', {
+const Electro = db.define<Model<PElectroState, PElectroState>, PElectroState>('electro', {
     electro: {
         type: FLOAT,
     },

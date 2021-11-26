@@ -2,6 +2,7 @@ import Router from '@koa/router';
 import assert from 'assert';
 import { desubscribeMail, subscribeMail } from '../service/mail';
 import UserModel from '../model/user';
+import { UserModelState } from '../model/user';
 
 const route = new Router({ prefix: '/mail' });
 
@@ -33,12 +34,13 @@ route.get('/deSubscribeMail', async ctx => {
 
     assert(account, '非法用户');
 
-    const user = await UserModel.findOne({
+    const userModel = await UserModel.findOne({
         where: { account: account },
     });
 
-    assert(user, '非法用户');
+    assert(userModel, '非法用户');
 
+    const user = userModel.toJSON() as UserModelState;
     await desubscribeMail(user.id, positionId);
 
     ctx.sendS();

@@ -4,7 +4,7 @@ import PositionModel, { transformToPositionStrcut } from '../model/position';
 import ElectroModel from '../model/electro';
 import { fetch_and_create_electro } from '../service/electro';
 import { QueryElectro, CheckPosition } from '../service/electro/interface';
-import MailMappingModel, { MailMamppingState } from '../model/mail';
+import MailMappingModel from '../model/mail';
 
 const route = new Router({ prefix: '/electro' });
 

@@ -1,9 +1,10 @@
 import axios from 'axios';
 import qs from 'query-string';
 import assert from 'assert';
-import PositionModel, { PositionModel as PositionModelT } from '../../model/position';
+import PositionModel, { PositionState } from '../../model/position';
 import ElectroModel from '../../model/electro';
 import { Area, Building, Room, Position } from './interface';
+import { info } from '../../tools/debug';
 
 enum QueryType {
     Area = 'synjones.onecard.query.elec.area',
@@ -58,19 +59,20 @@ export async function fetch_electro(account: string, area: Area, building: Build
     }
 }
 
-export async function fetch_and_create_electro(id: number | PositionModelT, area: Area, building: Building, room: Room) {
-    const positionItem =
+export async function fetch_and_create_electro(id: number | InstanceType<typeof PositionModel>, area: Area, building: Building, room: Room) {
+    const positionItem = (
         typeof id === 'number'
             ? (await PositionModel.findByPk(id, {
                   attributes: ['room', 'roomid', 'building', 'buildingid', 'area', 'areaid', 'id'],
               }))!
-            : id;
+            : id
+    ).toJSON() as PositionState;
 
     const electro = await fetch_electro('123', area, building, room);
 
     assert(typeof electro === 'number', electro as string);
 
-    console.log(`区域: ${area.areaname} 楼栋：${building.building} 房间：${room.room} 电量：${electro}`);
+    info(`区域: ${area.areaname} 楼栋：${building.building} 房间：${room.room} 电量：${electro}`);
 
     await ElectroModel.create({ electro, positionId: positionItem.id });
 

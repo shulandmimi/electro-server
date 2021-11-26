@@ -2,6 +2,8 @@ import Application, { Context, Next } from 'koa';
 import httpProxy, { ProxyResCallback, ServerOptions, ErrorCallback } from 'http-proxy';
 import { match } from 'node-match-path';
 import { isFunction } from 'lodash';
+import { info } from '../tools/debug';
+const debug = info.extend('proxy: ');
 const proxy = httpProxy.createProxy();
 
 const map = new Map();
@@ -35,11 +37,6 @@ export default function addProxy(app: Application) {
                     proxyRes: (pres, req, res) => {
                         let datas: Buffer[] = [];
                         pres.on('data', (data: Buffer) => {
-                            // const d = data.toString();
-                            // if (d.includes('系统异常')) {
-                            //     return;
-                            // }
-                            // map.set(type, data.toString());
                             datas.push(data);
                         });
 
@@ -48,12 +45,11 @@ export default function addProxy(app: Application) {
                             if (data.includes('系统异常')) {
                                 return;
                             }
-                            console.log(data);
                             map.set(type, data);
                         });
                     },
                     error(err, req, res, target) {
-                        console.log(err);
+                        debug(err);
                         ctx.body = err.message;
                     },
                 },
@@ -106,7 +102,7 @@ export function proxyMiddle(proxyUrl: string, options: Options) {
             queueMap.clear();
         }
 
-        console.log(`${ctx.req.url} =>> ${opts.target}`);
+        debug(`${ctx.req.url} =>> ${opts.target}`);
 
         ctx.req.url = '';
 

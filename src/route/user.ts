@@ -6,7 +6,8 @@ import { registerMailKey, hasRegisterKey, deleteRegisterKey, getRegisterValue, g
 import { sendMail, MailOption } from '../scripts/mail';
 import config from '../config';
 import { isEmail, isPassword } from '../tools/check';
-const debug = require('debug')('user: ');
+import { info } from '../tools/debug';
+const debug = info.extend('user: ');
 
 const route = new Router({ prefix: '/user' });
 
@@ -26,7 +27,7 @@ function genernalMailTemplate(title: string, text: string, html: string): MailOp
 const tokenKey = 'token';
 
 function genernalValidUrl(token: string) {
-    return `http://${config.application.host}/user/validRegisterMail?${tokenKey}=${token}`;
+    return `${config.application.host}/user/validRegisterMail?${tokenKey}=${token}`;
 }
 
 route.post('/registerMailUser', async ctx => {
