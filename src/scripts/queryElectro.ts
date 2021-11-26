@@ -16,7 +16,7 @@ db.afterSync(() => {
     dynamicGetTotal();
 });
 
-scheduleJob('*/1 * * * *', async fire => {
+scheduleJob('*/5 * * * *', async fire => {
     console.log(fire.toLocaleString());
     if (typeof total === 'undefined') {
         await dynamicGetTotal();

@@ -1,10 +1,10 @@
 import Router from '@koa/router';
-import assert from 'assert';
-import { col, fn } from 'sequelize';
+import { col, literal } from 'sequelize';
 import PositionModel, { transformToPositionStrcut } from '../model/position';
 import ElectroModel from '../model/electro';
 import { fetch_and_create_electro } from '../service/electro';
 import { QueryElectro, CheckPosition } from '../service/electro/interface';
+import MailMappingModel, { MailMamppingState } from '../model/mail';
 
 const route = new Router({ prefix: '/electro' });
 
@@ -17,25 +17,33 @@ route.get('/queryElectro', async ctx => {
         ctx.sendSD([]);
         return;
     }
-    const rooms = await PositionModel.findAll({
-        where: {
-            id: positions,
-        },
-    });
 
     const electros = await ElectroModel.findAll({
         attributes: ['id', 'electro', 'createdAt'],
         order: [['createdAt', 'DESC']],
         where: {
-            positionId: rooms.map(item => item.id),
+            positionId: positions,
         },
-        group: col('positionId'),
+        offset: 0,
+        limit: 1,
         include: {
             model: PositionModel,
             as: 'position',
             attributes: {
                 exclude: ['createdAt', 'updatedAt'],
             },
+            include: ctx.tokens
+                ? [
+                      {
+                          model: MailMappingModel,
+                          attributes: ['id', 'createdAt'],
+                          as: 'mail',
+                          on: {
+                              positionId: literal('position.id'),
+                          },
+                      },
+                  ]
+                : [],
         },
     });
 

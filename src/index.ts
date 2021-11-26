@@ -28,7 +28,7 @@ app.listen(12306, async () => {
         process.exit(1);
     }
     try {
-        await db.sync({ alter: true });
+        await db.sync({ alter: true, logging: false });
         console.log('同步成功');
     } catch (error) {
         console.log(error);

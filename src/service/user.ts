@@ -6,6 +6,7 @@ import config from '../config';
 import redis, { select, DBMapping } from '../tools/redis';
 import { DAY, SECONDS } from '../tools/time';
 import { RegisterMail } from '../route/user';
+import UserModel from '../model/user';
 
 const REGISTER_MAIL_EXPIRE = SECONDS * 30;
 
@@ -53,15 +54,19 @@ interface Platform {
 }
 
 export const LOGIN_TOKEN = 'token';
-export function genernalJWTAccount(ctx: Context): string {
+export async function genernalJWTAccount(ctx: Context): Promise<string> {
     const { account, platform } = ctx.request.body as RegisterMail & { platform: Platform };
-    const key = jwt.encode({ account, expires: Date.now() + JWT_EXPIRES, platform }, config.secret.salt!);
+    const user = await UserModel.findOne({ where: { account } });
 
+    assert(user, '无效用户');
+
+    const key = jwt.encode({ account, expires: Date.now() + JWT_EXPIRES, platform, id: user.id }, config.secret.salt!);
     return key;
 }
 
-interface LoginState {
+export interface LoginState {
     expires: number;
+    id: number;
     account: string;
     platform: Platform;
 }
@@ -70,11 +75,19 @@ interface CheckLoginOptions {
     include?: string[];
     exclude?: string[];
 }
+
 export function middleForCheckLogin(app: Application) {
     app.use(checkLogin({ include: [] }));
 
     function checkLogin(options: CheckLoginOptions) {
         return async (ctx: Context, next: Next) => {
+            const tokens = ctx.cookies.get(LOGIN_TOKEN);
+            let jwtToken: LoginState | undefined;
+            if (tokens) {
+                jwtToken = jwt.decode(tokens, config.secret.salt!);
+                ctx.tokens = jwtToken;
+            }
+
             if (!(options.include || []).some(item => match(item, ctx.path).matches)) {
                 return await next();
             }
@@ -82,11 +95,8 @@ export function middleForCheckLogin(app: Application) {
                 return await next();
             }
 
-            const token = ctx.cookies.get(LOGIN_TOKEN);
-            if (token) {
-                // const { account, platform } = (ctx.request.body || {}) as RegisterMail & { platform: Platform };
-                const data: LoginState = jwt.decode(token, config.secret.salt!);
-                assert(data.expires > Date.now(), '登录失效');
+            if (jwtToken) {
+                assert(jwtToken.expires > Date.now(), '登录失效');
             }
             await next();
         };

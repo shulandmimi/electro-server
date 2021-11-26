@@ -101,7 +101,7 @@ route.post('/login', async ctx => {
 
     assert(user, '用户帐号或密码错误');
 
-    const key = genernalJWTAccount(ctx);
+    const key = await genernalJWTAccount(ctx);
 
     ctx.response.set('Set-Cookie', `${LOGIN_TOKEN}=${key}; max-age=${JWT_EXPIRES}; path=/`);
     ctx.sendS();

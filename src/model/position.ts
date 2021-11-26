@@ -1,6 +1,5 @@
 import { Model, STRING, DATE, INTEGER } from 'sequelize';
 import db from '../tools/db';
-import Electro from './electro';
 
 export interface PositionModel extends Model {
     id: number;
@@ -49,7 +48,6 @@ const Position = db.define<PositionModel>('position', {
         comment: '房间ID',
     },
 });
-
 export function transformToPositionStrcut({ area, areaid, building, buildingid, room, roomid, ...other }: PositionModel) {
     return {
         ...other,

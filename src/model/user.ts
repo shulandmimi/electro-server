@@ -10,7 +10,7 @@ export interface UserModelState extends OUserModelState, Model<OUserModelState> 
     id: number;
 }
 
-export default db.define<UserModelState, OUserModelState>('user', {
+const UserModel = db.define<UserModelState, OUserModelState>('user', {
     account: {
         type: STRING,
         comment: '用户名',
@@ -22,3 +22,5 @@ export default db.define<UserModelState, OUserModelState>('user', {
         allowNull: false,
     },
 });
+
+export default UserModel;

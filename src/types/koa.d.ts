@@ -1,5 +1,7 @@
 import koa from 'koa';
 import { StatusCode } from '../tools/types';
+import { LoginState } from '../service/user';
+
 declare module 'koa' {
     interface DefaultContext {
         send(data: any): void;
@@ -15,9 +17,7 @@ declare module 'koa' {
         sendOM(msg: string): void;
         /** sendFailedAndMessage */
         sendF(msg: string, code: StatusCode): void;
+        tokens?: LoginState;
     }
 
-    interface Context {
-        send(data: any): void;
-    }
 }
