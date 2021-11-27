@@ -8,6 +8,7 @@ export default {
 
     redis: {
         pass: env.REDIS_PASS,
+        port: typeof env.REDIS_PORT !== 'undefined' ? (Number(env.REDIS_PORT) || 6379) : 6379,
     },
     mail: {
         user: env.MAIL_USER,

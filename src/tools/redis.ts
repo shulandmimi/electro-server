@@ -3,7 +3,9 @@ import config from '../config';
 import { error } from './debug';
 
 const client = redis.createClient({
+    host: config.DB_HOST,
     auth_pass: config.redis.pass,
+    port: config.redis.port,
 });
 
 export enum DBMapping {
