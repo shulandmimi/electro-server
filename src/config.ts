@@ -6,6 +6,9 @@ export default {
     DB_DATABASE: process.env.DB_DATABASE,
     DB_HOST: process.env.DB_HOST,
 
+    redis: {
+        pass: env.REDIS_PASS,
+    },
     mail: {
         user: env.MAIL_USER,
         pass: env.MAIL_PASS,

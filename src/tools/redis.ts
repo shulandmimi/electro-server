@@ -1,7 +1,10 @@
 import redis from 'redis';
+import config from '../config';
 import { error } from './debug';
 
-const client = redis.createClient();
+const client = redis.createClient({
+    auth_pass: config.redis.pass,
+});
 
 export enum DBMapping {
     MailMapping = 0,
