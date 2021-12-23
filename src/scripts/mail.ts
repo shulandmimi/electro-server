@@ -2,7 +2,7 @@ import nodemailer, { SendMailOptions, Transporter, SentMessageInfo } from 'nodem
 import config from '../config';
 import { info } from '../tools/debug';
 import { scheduleJob } from 'node-schedule';
-import { getAlterMail } from '../service/mail';
+import { getAlterMail, removeElectroUrgentMapping } from '../service/mail';
 const debug = info.extend('mail: ');
 
 type PICK_NAME = 'html' | 'text' | 'subject';
@@ -42,10 +42,10 @@ scheduleJob('*/30 * * * *', fire => {
 
 async function scheduleSendMail(fire: string) {
     const data = await getAlterMail();
-
     if (!data) {
         return;
     }
+    await removeElectroUrgentMapping(`${data.user.id}${data.position.id}`);
     debug(data);
     const { electro, user, position } = data;
 

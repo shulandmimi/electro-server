@@ -10,8 +10,14 @@ import UserModel from '../model/user';
 import { error } from '../tools/debug';
 import { UserModelState } from '../model/user';
 
+/**
+ * 注册key的效期
+ */
 const REGISTER_MAIL_EXPIRE = SECONDS * 30;
 
+/**
+ * 将注册key放入redis中
+ */
 export function registerMailKey(key: string, value: string) {
     return new Promise(async (resolve, reject) => {
         select(DBMapping.MailMapping);
@@ -22,6 +28,9 @@ export function registerMailKey(key: string, value: string) {
     });
 }
 
+/**
+ * 查看redis中是否由`key`
+ */
 export function hasRegisterKey(key: string): Promise<boolean> {
     return new Promise(async resolve => {
         await select(DBMapping.MailMapping);
@@ -32,6 +41,9 @@ export function hasRegisterKey(key: string): Promise<boolean> {
     });
 }
 
+/**
+ * 注册后删除redis中对`key`
+ */
 export async function deleteRegisterKey(key: string) {
     await select(DBMapping.MailMapping);
     return new Promise(async resolve => {
@@ -44,6 +56,9 @@ export async function deleteRegisterKey(key: string) {
     });
 }
 
+/**
+ * 获取缓存的key
+ */
 export function getRegisterValue(key: string): Promise<string | null> {
     return new Promise(async (resolve, reject) => {
         await select(DBMapping.MailMapping);
@@ -56,6 +71,9 @@ export function getRegisterValue(key: string): Promise<string | null> {
     });
 }
 
+/**
+ * 登录 cookie JWT 缓存时间
+ */
 export const JWT_EXPIRES = (DAY * 30) / 1000;
 
 interface Platform {
@@ -66,6 +84,9 @@ interface Platform {
 }
 
 export const LOGIN_TOKEN = 'token';
+/**
+ * 生成登录`key`
+ */
 export async function genernalJWTAccount(ctx: Context): Promise<string> {
     const { account, platform } = ctx.request.body as RegisterMail & { platform: Platform };
     const userModel = await UserModel.findOne({ where: { account } });

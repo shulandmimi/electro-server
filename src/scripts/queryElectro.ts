@@ -2,9 +2,10 @@ import { scheduleJob } from 'node-schedule';
 import ElectroModel from '../model/electro';
 import PositionModel, { PositionState } from '../model/position';
 import { fetch_electro } from '../service/electro';
-import { ElectroUrgentState, pushElectronUrgentData } from '../service/mail';
+import { pushElectronUrgentData } from '../service/mail';
+import { ElectroUrgentState } from '../service/mail/interface';
 import db from '../tools/db';
-import { info, warn } from '../tools/debug';
+import { info } from '../tools/debug';
 import MailMapping from '../model/mail';
 import UserModel from '../model/user';
 import { literal } from 'sequelize';
@@ -72,7 +73,7 @@ scheduleJob('*/5 * * * *', async fire => {
                 },
             ],
         });
-        debug("共有 %d 个用户需要通知", mails.length);
+        debug('共有 %d 个用户需要通知', mails.length);
         if (!mails.length) return;
         pushElectronUrgentData(mails.map(i => i.toJSON()) as any as ElectroUrgentState[]);
     }
